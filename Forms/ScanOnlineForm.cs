@@ -272,6 +272,7 @@ namespace QualityCheckDemo.Forms
                             PerfectCheckTask();
                             //转档  
                             CntLogicTurn();
+                            ShowProductImage(_currenChecktTask.ProductCode); 
                             //刷新界面数据
                             RegetProcedureTasksDetails();
                         }
@@ -439,6 +440,12 @@ namespace QualityCheckDemo.Forms
                 cCheckProcessing.EquipmentCode = _equipmentCode;
                 cCheckProcessing.EquipmentName = _equipmentName;
                 cCheckProcessing.EquipmentID = _equipmentId;
+
+                //上线类型:返修上线/正常上线
+                cCheckProcessing.Online_Type = (int) (_currenChecktTask.CheckReason == (decimal?) CheckReason.Repair
+                    ? ProductProcessingOnlineType.Repair
+                    : ProductProcessingOnlineType.Normal); 
+
 
                 context.C_CheckProcessing.Add(cCheckProcessing);
                 context.SaveChanges();

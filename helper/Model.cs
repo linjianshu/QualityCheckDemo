@@ -2,6 +2,7 @@
 using System.ComponentModel.DataAnnotations.Schema;
 using System.Data.Entity;
 using System.Linq;
+using QualityCheckDemo.POCO;
 
 namespace QualityCheckDemo
 {
@@ -18,6 +19,7 @@ namespace QualityCheckDemo
         }
         public virtual DbSet<KitProcessingDocument> KitProcessingDocument { get; set; }
 
+        public virtual DbSet<_TripartiteReview> _TripartiteReview { get; set; }
         public virtual DbSet<C__MigrationHistory> C__MigrationHistory { get; set; }
         public virtual DbSet<C_BBdbR_CntlPntBase> C_BBdbR_CntlPntBase { get; set; }
         public virtual DbSet<C_BWuE_CntlLogicDoc> C_BWuE_CntlLogicDoc { get; set; }

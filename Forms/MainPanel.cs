@@ -2,6 +2,8 @@
 using HZH_Controls;
 using HZH_Controls.Controls;
 using HZH_Controls.Forms;
+using MachineryProcessingDemo;
+using MachineryProcessingDemo.helper;
 using Microsoft.Extensions.Configuration;
 using System;
 using System.Collections.Generic;
@@ -9,10 +11,9 @@ using System.Data.Entity;
 using System.Drawing;
 using System.IO;
 using System.Linq;
+using System.Net;
 using System.Windows.Forms;
-using MachineryProcessingDemo;
-using MachineryProcessingDemo.helper;
-using QualityCheckDemo.helper;
+// using QualityCheckDemo.helper;
 
 namespace QualityCheckDemo.Forms
 {
@@ -177,7 +178,7 @@ namespace QualityCheckDemo.Forms
                 {
                     var memoryStream = new MemoryStream(GetProductBase(cCheckProcessing.ProductCode).Image);
                     var fromStream = Image.FromStream(memoryStream);
-                    ProductInfo.Image = fromStream; 
+                    ProductInfo.Image = fromStream;
 
                     ProductIDTxt.Text = cCheckProcessing.ProductBornCode;
                     ProductIDTxt.ReadOnly = true;
@@ -325,7 +326,7 @@ namespace QualityCheckDemo.Forms
 
             if (!HasExitProductTask())
             {
-                ProductInfo.Image = null; 
+                ProductInfo.Image = null;
 
                 ProductNameTxt.Clear();
                 ProductIDTxt.Clear();
@@ -374,7 +375,7 @@ namespace QualityCheckDemo.Forms
 
                                     var memoryStream = new MemoryStream(GetProductBase(checktask.ProductCode).Image);
                                     var fromStream = Image.FromStream(memoryStream);
-                                    BeginInvoke(new Action((() => ProductInfo.Image =fromStream )));
+                                    BeginInvoke(new Action((() => ProductInfo.Image = fromStream)));
 
                                     InialToDoTasks();
                                 }
@@ -433,7 +434,8 @@ namespace QualityCheckDemo.Forms
 
                 foreach (var cCheckTask in checkTasks)
                 {
-                    cCheckTask.Reserve1 = "三坐标检验";
+                    
+                    cCheckTask.Reserve1 =cCheckTask.CheckReason==(decimal?) CheckReason.Repair?"三坐标返修": "三坐标检验";
                 }
                 cCheckTasks.AddRange(checkTasks);
                 return cCheckTasks;
@@ -453,16 +455,15 @@ namespace QualityCheckDemo.Forms
                     var any = context.C_CheckProcessing.Any(s =>
                         s.ProductBornCode == ProductIDTxt.Text.Trim() &&
                         s.ProcedureName == strings &&
-                        s.CheckType == (decimal?)CheckType.ThreeCoordinate && s.CheckReportPath != null);
+                        s.CheckType == (decimal?)CheckType.ThreeCoordinate && s.CheckReportPath != null
+                        &&s.OfflineStaffID==null);
                     if (any)
                     {
                         ProductionStatusInfoPanel.Controls.Find("control002", false).First().BackColor
                             = Color.MediumSeaGreen;
                     }
                 }
-
             }
-
         }
         public bool HasExitProductTask()
         {
@@ -572,7 +573,13 @@ namespace QualityCheckDemo.Forms
                 var selectUploadFile = SelectUploadFile(out string filePath);
                 if (selectUploadFile == DialogResult.OK)
                 {
-                    UploadFilePath(filePath);
+                    //文件夹命名规则:  订单号-项目号-产品出生证
+                    string directoryName = _cCheckProcessing.PlanID.ToString() + '-' + _cCheckProcessing.ProjectID + '-' +
+                                           _cCheckProcessing.ProductBornCode;
+                    // var upLoadFile2 = UpLoadFile2(filePath, urlPath, "ZLR", "SA123", 1);
+                    var upLoadFile2 = UpLoadFile2(filePath, $"ftp://zlr@192.168.1.22/{directoryName}/", "ZLR", "SA123", 1 , out var remoteFileAddress);
+                    if (!upLoadFile2) return;
+                    UploadFilePath(remoteFileAddress);
                     ProductionStatusInfoPanel.Controls.Find("control002", false).First().BackColor =
                         Color.MediumSeaGreen;
                     FrmDialog.ShowDialog(this, "质检报告上传成功");
@@ -583,6 +590,74 @@ namespace QualityCheckDemo.Forms
                 FrmDialog.ShowDialog(this, "未检测到上线质检产品", "警告");
             }
         }
+        /// <summary>
+        /// 上传文件：要设置共享文件夹是否有创建的权限，否则无法上传文件
+        /// </summary>
+        /// <param name="fileNamePath">本地文件路径</param>
+        /// <param name="urlPath">共享文件夹地址</param>
+        /// <param name="User"></param>
+        /// <param name="Pwd"></param>
+        /// <param name="islog"></param>
+        /// <returns></returns>
+        private bool UpLoadFile2(string fileNamePath, string urlPath, string User, string Pwd, int islog,out string remoteFileAddress)
+        {
+            var flag = false;
+            string newFileName = fileNamePath.Substring(fileNamePath.LastIndexOf(@"\") + 1);//取文件名称
+
+            var urlPath1 = urlPath + newFileName;
+            remoteFileAddress = urlPath1; 
+            WebClient myWebClient = new WebClient();
+            NetworkCredential cread = new NetworkCredential(User, Pwd);
+            myWebClient.Credentials = cread;
+
+            FileStream fs = new FileStream(fileNamePath, FileMode.Open, FileAccess.Read);
+            BinaryReader r = new BinaryReader(fs);
+
+            Stream postStream = null;
+            try
+            {
+                byte[] postArray = r.ReadBytes((int)fs.Length);
+                postStream = myWebClient.OpenWrite(urlPath1);
+
+                if (!Directory.Exists(urlPath))
+                {
+                    // Directory.CreateDirectory(urlPath1);
+                    // var directories = Directory.GetDirectories("ftp://zlr@192.168.1.22");
+                    // var directoryInfo = new DirectoryInfo(@"ftp:/192.168.1.22\\ljsdemo1\");
+                    // if (!directoryInfo.Exists)
+                    // {
+                    // directoryInfo.Create();
+                    // }
+                    // Directory.CreateDirectory("ljsdemo1");
+                    // Directory.CreateDirectory(@"ftp:/zlr@192.168.1.22/ljsdemo1");
+                }
+
+                if (postStream.CanWrite)
+                {
+                    postStream.Write(postArray, 0, postArray.Length);
+                    MessageBox.Show("文件上传成功！", "提醒", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                    flag = true;
+                }
+                else
+                {
+                    MessageBox.Show("文件上传错误！", "警告", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                    flag = false;
+                }
+
+                postStream.Close();
+                return flag;
+            }
+            catch (Exception ex)
+            {
+                return false;
+                if (islog > 0)
+                    // com.log("UpLoadFile", "上传文件到共享文件夹：" + ex.Message);
+                    if (postStream != null)
+                        postStream.Close();
+                return false;
+            }
+        }
+
         private void AddUploadCntLogic()
         {
             using (var context = new Model())
@@ -601,20 +676,21 @@ namespace QualityCheckDemo.Forms
                 context.SaveChanges();
             }
         }
-        private void UploadFilePath(string filePath)
+        private void UploadFilePath(string remoteFileAddress)
         {
             using (var context = new Model())
             {
                 //在质量数据表中根据计划号/产品出生证/工序编号/检验类型(三坐标)
                 var cProductQualityData = context.C_ProductQualityData.FirstOrDefault(s =>
                     s.PlanID == _cCheckProcessing.PlanID && s.ProductBornCode == _cCheckProcessing.ProductBornCode &&
-                    s.ProcedureCode == _cCheckProcessing.ProcedureCode && s.CheckType == (decimal?)CheckType.ThreeCoordinate);
+                    s.ProcedureCode == _cCheckProcessing.ProcedureCode && s.CheckType == (decimal?)CheckType.ThreeCoordinate
+                    &&s.Online_Type==_cCheckProcessing.Online_Type&&s.OfflineStaffID==null);
 
                 //如果找到了就更新操作 , 如果没找到就插入
                 if (cProductQualityData != null)
                 {
                     //这里有疑问
-                    cProductQualityData.CheckReportPath = filePath;
+                    cProductQualityData.CheckReportPath = remoteFileAddress;
                     cProductQualityData.CheckStaffName = _staffName;
                     cProductQualityData.CheckStaffCode = _staffCode;
                     context.SaveChanges();
@@ -630,19 +706,20 @@ namespace QualityCheckDemo.Forms
                     productQualityData.OnlineStaffCode = _staffCode;
                     productQualityData.OnlineStaffID = _staffId;
                     productQualityData.OnlineStaffName = _staffName;
+                    productQualityData.Online_Type = _cCheckProcessing.Online_Type; 
 
                     //这里有疑问 如果需要修改的话, 机加工那边也需要修改
                     productQualityData.CheckStaffCode = _staffCode;
                     productQualityData.CheckStaffName = _staffCode;
 
-                    productQualityData.CheckReportPath = filePath;
+                    productQualityData.CheckReportPath = remoteFileAddress;
 
                     context.C_ProductQualityData.Add(productQualityData);
                     context.SaveChanges();
                 }
 
                 context.Entry(_cCheckProcessing).State = EntityState.Modified;
-                _cCheckProcessing.CheckReportPath = filePath;
+                _cCheckProcessing.CheckReportPath = remoteFileAddress;
 
                 context.SaveChanges();
             }

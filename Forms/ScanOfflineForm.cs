@@ -109,7 +109,11 @@ namespace QualityCheckDemo.Forms
                     PerfectFirstDocumentInfo(ProcedureFirstStatus.Qualified);
                 }
             }
-             
+            
+            //如果是返修的话,就要继续填充三方会审表中的质检检验结果数据
+            PerfectTripartiteReview(); 
+
+
             //检验任务表里状态修改以及完善最后修改时间呀什么的
             PerfectCheckTask();
             //控制点转档
@@ -123,6 +127,40 @@ namespace QualityCheckDemo.Forms
             RegetProcedureTasksDetails();
             Close();
         }
+
+        private void PerfectTripartiteReview()
+        {
+            using (var context = new Model())
+            {
+                //在质检任务表中 根据过程表中的产品出生证 / 有效性/ 工序编号 / 任务状态(执行中) 获取元数据
+                var cCheckTask = context.C_CheckTask.FirstOrDefault(s =>
+                    s.ProductBornCode == _cCheckProcessing.ProductBornCode && s.IsAvailable == true &&
+                    s.ProcedureCode == _cCheckProcessing.ProcedureCode &&
+                    s.TaskState == (decimal?)CheckTaskState.InExecution);
+
+                //判断是不是返修件
+                if (cCheckTask.CheckReason==(decimal?) CheckReason.Repair)
+                {
+                    //在三方会审表中 根据产品出生证/ 工序号/ 有效性 按返修创建时间来排序 得到最新的返修单子
+                    var firstOrDefault = context._TripartiteReview.Where(s =>
+                            s.ProductBornCode == _cCheckProcessing.ProductBornCode &&
+                            s.ProcedureCode == _cCheckProcessing.ProcedureCode && s.IsAvailable == true)
+                        .OrderByDescending(s => s.ReworkCreateTime).FirstOrDefault();
+
+                    if (firstOrDefault!=null)
+                    {
+                        firstOrDefault.CheckStaffID = _staffId;
+                        firstOrDefault.CheckStaffName = _staffName;
+                        firstOrDefault.CheckStaffCode = _staffCode;
+                        firstOrDefault.InspectionResultType =
+                            (int?) (comboBox1.Text.Equals("正常下机") ? OfflineType.Normal : OfflineType.NG);
+                        firstOrDefault.InspectionResultDescription = richTextBox1.Text.Trim();
+                        context.SaveChanges();
+                    }
+                }
+            }
+        }
+
         private void PerfectFirstDocumentInfo(ProcedureFirstStatus procedureFirstStatus)
         {
             using (var context = new Model())
@@ -176,7 +214,8 @@ namespace QualityCheckDemo.Forms
                 //在产品质量数据表里根据产品出生证/计划号/下机人员为空/工序编号/检验类型(三坐标)
                 var productQualityData = context.C_ProductQualityData.First(s => s.ProductBornCode == _cCheckProcessing.ProductBornCode &&
                                                                                  s.PlanID == _cCheckProcessing.PlanID && s.OfflineStaffID == null &&
-                                                                                 s.ProcedureCode == _cCheckProcessing.ProcedureCode && s.CheckType ==(decimal?) CheckType.ThreeCoordinate);
+                                                                                 s.ProcedureCode == _cCheckProcessing.ProcedureCode && s.CheckType ==(decimal?) CheckType.ThreeCoordinate
+                                                                                 &&s.Online_Type==_cCheckProcessing.Online_Type);
 
                 productQualityData.OfflineStaffCode = _staffCode;
                 productQualityData.OfflineStaffName = _staffName;
@@ -219,6 +258,8 @@ namespace QualityCheckDemo.Forms
                 _cCheckProcessing.OfflineStaffCode = _staffCode;
                 _cCheckProcessing.OfflineStaffName = _staffName;
                 _cCheckProcessing.OfflineStaffID = _staffId;
+
+                //如果是返修的质检 则需要将部分信息录入进三方会审表中哦!!!
 
                 if (comboBox1.Text.Trim().Contains("正常"))
                 {
