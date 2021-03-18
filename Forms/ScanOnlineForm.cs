@@ -8,6 +8,7 @@ using System.IO.Ports;
 using System.Linq;
 using System.Threading;
 using System.Windows.Forms;
+using MachineryProcessingDemo.helper;
 using WorkPlatForm.Public_Classes;
 
 namespace QualityCheckDemo.Forms
@@ -77,9 +78,10 @@ namespace QualityCheckDemo.Forms
         public Action RegetProcedureTasksDetails;
         public Action<string, string, string, string> DisplayInfoToMainPanel;
         public Action ChangeBgColor;
+        public Func<string, bool> ShowProductImage; 
         private void ScanOnline_Load(object sender, EventArgs e)
         {
-            var addXmlFile = new ConfigurationBuilder().SetBasePath("E:\\project\\visual Studio Project\\QualityCheckDemo")
+            var addXmlFile = new ConfigurationBuilder().SetBasePath(GlobalClass.Xml)
                 .AddXmlFile("config.xml");
             var configuration = addXmlFile.Build();
             _workshopId = configuration["WorkshopID"];

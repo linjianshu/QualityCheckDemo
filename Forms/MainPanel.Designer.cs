@@ -133,13 +133,11 @@ namespace QualityCheckDemo.Forms
             // 
             // ProductInfo
             // 
-            this.ProductInfo.Image = ((System.Drawing.Image)(resources.GetObject("ProductInfo.Image")));
             this.ProductInfo.ImageAlign = System.Drawing.ContentAlignment.TopCenter;
             this.ProductInfo.Location = new System.Drawing.Point(627, 26);
             this.ProductInfo.Name = "ProductInfo";
             this.ProductInfo.Size = new System.Drawing.Size(65, 49);
             this.ProductInfo.TabIndex = 4;
-            this.ProductInfo.Text = "汪汪";
             this.ProductInfo.TextAlign = System.Drawing.ContentAlignment.BottomCenter;
             // 
             // SecondTitlePanel1
@@ -452,21 +450,21 @@ namespace QualityCheckDemo.Forms
             this.panel9.Dock = System.Windows.Forms.DockStyle.Left;
             this.panel9.Location = new System.Drawing.Point(0, 442);
             this.panel9.Name = "panel9";
-            this.panel9.Size = new System.Drawing.Size(613, 346);
+            this.panel9.Size = new System.Drawing.Size(692, 346);
             this.panel9.TabIndex = 10;
             // 
             // ProductionTaskQueue1
             // 
-            this.ProductionTaskQueue1.Location = new System.Drawing.Point(140, 163);
+            this.ProductionTaskQueue1.Location = new System.Drawing.Point(226, 163);
             this.ProductionTaskQueue1.Name = "ProductionTaskQueue1";
-            this.ProductionTaskQueue1.Size = new System.Drawing.Size(255, 40);
+            this.ProductionTaskQueue1.Size = new System.Drawing.Size(285, 40);
             this.ProductionTaskQueue1.TabIndex = 4;
             // 
             // CompletedTask1
             // 
-            this.CompletedTask1.Location = new System.Drawing.Point(140, 5);
+            this.CompletedTask1.Location = new System.Drawing.Point(226, 5);
             this.CompletedTask1.Name = "CompletedTask1";
-            this.CompletedTask1.Size = new System.Drawing.Size(255, 40);
+            this.CompletedTask1.Size = new System.Drawing.Size(285, 40);
             this.CompletedTask1.TabIndex = 3;
             // 
             // ucDataGridView2
@@ -480,12 +478,12 @@ namespace QualityCheckDemo.Forms
             this.ucDataGridView2.HeadTextColor = System.Drawing.Color.Black;
             this.ucDataGridView2.IsShowCheckBox = false;
             this.ucDataGridView2.IsShowHead = true;
-            this.ucDataGridView2.Location = new System.Drawing.Point(11, 209);
+            this.ucDataGridView2.Location = new System.Drawing.Point(3, 209);
             this.ucDataGridView2.Name = "ucDataGridView2";
             this.ucDataGridView2.Padding = new System.Windows.Forms.Padding(0, 40, 0, 0);
             this.ucDataGridView2.RowHeight = 40;
             this.ucDataGridView2.RowType = typeof(HZH_Controls.Controls.UCDataGridViewRow);
-            this.ucDataGridView2.Size = new System.Drawing.Size(583, 220);
+            this.ucDataGridView2.Size = new System.Drawing.Size(682, 220);
             this.ucDataGridView2.TabIndex = 2;
             // 
             // ucDataGridView1
@@ -504,7 +502,7 @@ namespace QualityCheckDemo.Forms
             this.ucDataGridView1.Padding = new System.Windows.Forms.Padding(0, 40, 0, 0);
             this.ucDataGridView1.RowHeight = 40;
             this.ucDataGridView1.RowType = typeof(HZH_Controls.Controls.UCDataGridViewRow);
-            this.ucDataGridView1.Size = new System.Drawing.Size(583, 130);
+            this.ucDataGridView1.Size = new System.Drawing.Size(674, 130);
             this.ucDataGridView1.TabIndex = 2;
             // 
             // ShiftPlanTxt
@@ -547,9 +545,9 @@ namespace QualityCheckDemo.Forms
             // 
             this.panel10.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
             this.panel10.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.panel10.Location = new System.Drawing.Point(613, 442);
+            this.panel10.Location = new System.Drawing.Point(692, 442);
             this.panel10.Name = "panel10";
-            this.panel10.Size = new System.Drawing.Size(745, 346);
+            this.panel10.Size = new System.Drawing.Size(666, 346);
             this.panel10.TabIndex = 11;
             // 
             // ProductionTaskQueue

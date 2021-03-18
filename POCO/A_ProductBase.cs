@@ -21,8 +21,8 @@ namespace QualityCheckDemo
         [StringLength(50)]
         public string ProductSpeCode { get; set; }
 
-        [StringLength(100)]
-        public string Image { get; set; }
+
+        public byte[] Image { get; set; }
 
         public decimal? StandardCost { get; set; }
 

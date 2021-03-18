@@ -4,6 +4,7 @@ using System.Net;
 using System.Security.Cryptography;
 using System.Text;
 using HZH_Controls.Forms;
+using MachineryProcessingDemo.helper;
 using Microsoft.Extensions.Configuration;
 
 namespace QualityCheckDemo.Forms
@@ -25,7 +26,7 @@ namespace QualityCheckDemo.Forms
 
         private void UserLoginForm_Load(object sender, EventArgs e)
         {
-            var addXmlFile = new ConfigurationBuilder().SetBasePath("E:\\project\\visual Studio Project\\QualityCheckDemo")
+            var addXmlFile = new ConfigurationBuilder().SetBasePath(GlobalClass.Xml)
                 .AddXmlFile("config.xml");
             var configuration = addXmlFile.Build();
             _workshopId = configuration["WorkshopID"];

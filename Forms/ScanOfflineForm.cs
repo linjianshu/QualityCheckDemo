@@ -6,6 +6,7 @@ using System.Windows.Forms;
 using AutoMapper;
 using HZH_Controls;
 using HZH_Controls.Forms;
+using MachineryProcessingDemo.helper;
 using Microsoft.Extensions.Configuration;
 
 namespace QualityCheckDemo.Forms
@@ -35,10 +36,12 @@ namespace QualityCheckDemo.Forms
         public Action ChangeBgColor;
         public Action ClearMainPanelTxt;
         public Action RegetProcedureTasksDetails;
+        public Action ResetProductPhoto;
+
 
         private void ScanOfflineForm_Load(object sender, EventArgs e)
         {
-            var addXmlFile = new ConfigurationBuilder().SetBasePath("E:\\project\\visual Studio Project\\QualityCheckDemo")
+            var addXmlFile = new ConfigurationBuilder().SetBasePath(GlobalClass.Xml)
                 .AddXmlFile("config.xml");
             var configuration = addXmlFile.Build();
             _workshopId = configuration["WorkshopID"];

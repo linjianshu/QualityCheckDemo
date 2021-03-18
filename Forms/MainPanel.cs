@@ -1,15 +1,18 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Data.Entity;
-using System.Drawing;
-using System.Linq;
-using System.Windows.Forms;
-using AutoMapper;
+﻿using AutoMapper;
 using HZH_Controls;
 using HZH_Controls.Controls;
 using HZH_Controls.Forms;
-using MachineryProcessingDemo;
 using Microsoft.Extensions.Configuration;
+using System;
+using System.Collections.Generic;
+using System.Data.Entity;
+using System.Drawing;
+using System.IO;
+using System.Linq;
+using System.Windows.Forms;
+using MachineryProcessingDemo;
+using MachineryProcessingDemo.helper;
+using QualityCheckDemo.helper;
 
 namespace QualityCheckDemo.Forms
 {
@@ -62,7 +65,7 @@ namespace QualityCheckDemo.Forms
         private static C_CheckProcessing _cCheckProcessing;
         private void MainPanel_Load(object sender, EventArgs e)
         {
-            var addXmlFile = new ConfigurationBuilder().SetBasePath("E:\\project\\visual Studio Project\\QualityCheckDemo")
+            var addXmlFile = new ConfigurationBuilder().SetBasePath(GlobalClass.Xml)
                 .AddXmlFile("config.xml");
             var configuration = addXmlFile.Build();
             _workshopId = configuration["WorkshopID"];
@@ -133,7 +136,7 @@ namespace QualityCheckDemo.Forms
                 int localLblY = 25;
                 foreach (var cBBdbRCntlPntBase in cBBdbRCntlPntBases)
                 {
-                    var label = new Label()
+                    var label = new Label
                     {
                         Location = new Point(239, localLblY),
                         Size = new Size(112, 39),
@@ -172,6 +175,10 @@ namespace QualityCheckDemo.Forms
                 var cCheckProcessing = context.C_CheckProcessing.FirstOrDefault(s => s.EquipmentID == _equipmentId && s.OnlineTime != null);
                 if (cCheckProcessing != null)
                 {
+                    var memoryStream = new MemoryStream(GetProductBase(cCheckProcessing.ProductCode).Image);
+                    var fromStream = Image.FromStream(memoryStream);
+                    ProductInfo.Image = fromStream; 
+
                     ProductIDTxt.Text = cCheckProcessing.ProductBornCode;
                     ProductIDTxt.ReadOnly = true;
                     ProductNameTxt.Text = cCheckProcessing.ProductName;
@@ -196,6 +203,15 @@ namespace QualityCheckDemo.Forms
             timer1.Enabled = true;
         }
 
+        //传入productcode,获得产品图片
+        private A_ProductBase GetProductBase(string productCode)
+        {
+            using (var context = new Model())
+            {
+                return context.A_ProductBase.FirstOrDefault(s => s.IsAvailable == true && s.ProductCode == productCode);
+            }
+        }
+
         private void OpenForceOfflineForm(object sender, EventArgs e)
         {
             InialToDoTasks();
@@ -204,8 +220,8 @@ namespace QualityCheckDemo.Forms
         private void EndQcEvent(object sender, EventArgs e)
         {
             var label = (Label)sender;
-            if (label.BackColor==Color.MediumSeaGreen)return; 
-                panel10.Controls.Clear();
+            if (label.BackColor == Color.MediumSeaGreen) return;
+            panel10.Controls.Clear();
             if (string.IsNullOrEmpty(ProductIDTxt.Text))
             {
                 FrmDialog.ShowDialog(this, "未检测到上线质检产品", "警告");
@@ -232,19 +248,26 @@ namespace QualityCheckDemo.Forms
             {
                 new DataGridViewColumnEntity()
                 {
-                    DataField = "ProductBornCode", HeadText = "产品出生证", Width = 25, WidthType = SizeType.Percent
+                    Width = 20,
+                    WidthType = SizeType.Percent,
+                    CustomCellType = typeof(UCTestGridTable_CustomCellIcon),
+                    HeadText = "产品图片"
                 },
                 new DataGridViewColumnEntity()
                 {
-                    DataField = "ProcedureName", HeadText = "工序名称", Width = 15, WidthType = SizeType.Percent
+                    DataField = "ProductBornCode", HeadText = "产品出生证", Width = 20, WidthType = SizeType.Percent
                 },
                 new DataGridViewColumnEntity()
                 {
-                    DataField = "CreateTime", HeadText = "预计开始时间", Width = 35, WidthType = SizeType.Percent
+                    DataField = "ProcedureName", HeadText = "工序名称", Width = 10, WidthType = SizeType.Percent
                 },
                 new DataGridViewColumnEntity()
                 {
-                    DataField = "Reserve1", HeadText = "检验类型", Width = 25, WidthType = SizeType.Percent
+                    DataField = "CreateTime", HeadText = "预计开始时间", Width = 30, WidthType = SizeType.Percent
+                },
+                new DataGridViewColumnEntity()
+                {
+                    DataField = "Reserve1", HeadText = "检验类型", Width = 20, WidthType = SizeType.Percent
                 }
             };
             ucDataGridView2.Columns = lstColumns1;
@@ -262,15 +285,22 @@ namespace QualityCheckDemo.Forms
             {
                 new DataGridViewColumnEntity()
                 {
-                    DataField = "ProductBornCode", HeadText = "产品出生证", Width = 40, WidthType = SizeType.Percent
+                    Width = 20,
+                    WidthType = SizeType.Percent,
+                    CustomCellType = typeof(UCTestGridTable_CustomCellIcon),
+                    HeadText = "产品图片"
                 },
                 new DataGridViewColumnEntity()
                 {
-                    DataField = "Reserve2", HeadText = "工序名称", Width = 20, WidthType = SizeType.Percent
+                    DataField = "ProductBornCode", HeadText = "产品出生证", Width = 30, WidthType = SizeType.Percent
                 },
                 new DataGridViewColumnEntity()
                 {
-                    DataField = "Reserve1", HeadText = "质检结果", Width = 35, WidthType = SizeType.Percent
+                    DataField = "Reserve2", HeadText = "工序名称", Width = 15, WidthType = SizeType.Percent
+                },
+                new DataGridViewColumnEntity()
+                {
+                    DataField = "Reserve1", HeadText = "质检结果", Width = 30, WidthType = SizeType.Percent
                 }
             };
 
@@ -295,6 +325,8 @@ namespace QualityCheckDemo.Forms
 
             if (!HasExitProductTask())
             {
+                ProductInfo.Image = null; 
+
                 ProductNameTxt.Clear();
                 ProductIDTxt.Clear();
                 CurrentProcessTxt.Clear();
@@ -339,6 +371,11 @@ namespace QualityCheckDemo.Forms
                                     scanOnlineForm.PerfectCheckTask();
                                     //控制点转档  
                                     scanOnlineForm.CntLogicTurn();
+
+                                    var memoryStream = new MemoryStream(GetProductBase(checktask.ProductCode).Image);
+                                    var fromStream = Image.FromStream(memoryStream);
+                                    BeginInvoke(new Action((() => ProductInfo.Image =fromStream )));
+
                                     InialToDoTasks();
                                 }
                             }
@@ -458,6 +495,8 @@ namespace QualityCheckDemo.Forms
             var exitProductTask = HasExitProductTask();
             if (!exitProductTask)
             {
+                ProductInfo.Image = null;
+
                 ProductNameTxt.Clear();
                 ProductIDTxt.Clear();
                 CurrentProcessTxt.Clear();
@@ -483,6 +522,13 @@ namespace QualityCheckDemo.Forms
                     RegetProcedureTasksDetails = () =>
                     {
                         InialToDoTasks();
+                    },
+                    ShowProductImage = (string a) =>
+                    {
+                        var memoryStream = new MemoryStream(GetProductBase(a).Image);
+                        var fromStream = Image.FromStream(memoryStream);
+                        BeginInvoke(new Action((() => ProductInfo.Image = fromStream)));
+                        return true;
                     }
                 };
                 var controls = scanOnlineForm.Controls.Find("lblTitle", false).First();
@@ -655,6 +701,10 @@ namespace QualityCheckDemo.Forms
                 {
                     InitialDidTasks();
                     InialToDoTasks();
+                },
+                ResetProductPhoto = () =>
+                {
+                    BeginInvoke(new Action((() => ProductInfo.Image = null)));
                 }
             };
             var controls = scanOfflineForm.Controls.Find("lblTitle", false).First();
